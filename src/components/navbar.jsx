@@ -1,11 +1,9 @@
 
 const Navbar = () => {
   return (
-    <div className="h-14 w-full shadow-md flex justify-between items-center">
+    <div className="h-14 w-full shadow-md flex justify-between items-center px-10">
       <p>Logo</p>
-      <div>
-      <button>Login</button>
-      <button>SignUp</button>
+      <div className="h-10 w-10 bg-black rounded-full">
       </div>
     </div>
   )
