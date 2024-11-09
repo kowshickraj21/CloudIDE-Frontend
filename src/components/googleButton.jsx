@@ -11,7 +11,8 @@ const GoogleButton = () => {
                 const user = await axios.get(
                     `http://localhost:3050/auth/google/callback?code=${res.access_token}`
                 );
-                localStorage.setItem("user",user.data);
+                console.log(user.data)
+                localStorage.setItem("user",JSON.stringify(user.data));
 
                 navigate("/console");
             } catch (error) {
