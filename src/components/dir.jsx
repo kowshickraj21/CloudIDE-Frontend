@@ -3,7 +3,6 @@ import { useState } from "react";
 import File from "./file";
 import { FaAngleDown,FaAngleRight } from "react-icons/fa";
 
-
 const Directory = ({ directory }) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -16,7 +15,7 @@ const Directory = ({ directory }) => {
       <div onClick={toggleOpen} style={{ cursor: 'pointer' }} className="flex items-center">
         {isOpen ? <FaAngleDown /> : <FaAngleRight />}{directory.name}
       </div>
-      {isOpen && (
+      {(isOpen && directory.children) && (
         <div>
           {directory.children.map((child, index) =>
             child.isDir ? (
