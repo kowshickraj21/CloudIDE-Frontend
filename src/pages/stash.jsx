@@ -1,72 +1,103 @@
 import { useParams } from "react-router-dom";
 import File from "../components/file";
 import Directory from "../components/dir";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 
 const Stash = () => {
   const { id } = useParams();
   const [fs, setFs] = useState([]);
+  const ws = useRef(null);
+  
 
-  useEffect(() => {
-    const ws = new WebSocket('ws://localhost:3050/start');
+    useEffect(() => {
+      ws.current = new WebSocket('ws://localhost:3050/start');
 
-    ws.onopen = () => {
-      console.log('WebSocket connected');
-      ws.send(JSON.stringify({
-        'type': 'getDir',
-        'data': `stashes/${id}/`
-      }));
-    };
+      ws.current.onopen = () => {
+        console.log('WebSocket connected');
+        ws.current.send(JSON.stringify({
+          type: 'getDir',
+          data: `stashes/${id}/`
+        }));
+      };
 
-    ws.onmessage = (event) => {
-      const message = JSON.parse(event.data);
-      console.log('Received message:', message);
-      const root = [];
+      ws.current.onmessage = (event) => {
+        const message = JSON.parse(event.data);
+        if (typeof message === 'string') {
+          console.log("File", message);
+        } else {
+          console.log('Received message:', message);
+          const root = [];
 
-      message.forEach((path) => {
-        const parts = path.split('/').slice(2);
-        let currentLevel = root;
+          message.forEach((path) => {
+            const parts = path.split('/');
+            let currentLevel = root;
 
-        parts.forEach((part, index) => {
-          let existingPath = currentLevel.find((node) => node.name === part);
-          if(part == "")return;
-          if (!existingPath) {
-            existingPath = {
-              name: part,
-              isDir: index !== parts.length - 1,
-              children: [],
-            };
-            currentLevel.push(existingPath);
-          }
+            parts.forEach((part, index) => {
+              if(index < 1 || part === "") return 
+              let existingPath = currentLevel.find((node) => node.name === part);
+              if (!existingPath) {
+                existingPath = {
+                  name: part,
+                  path: parts.slice(0, index + 1).join('/'),
+                  isDir: index !== parts.length - 1,
+                  children: [],
+                };
+                currentLevel.push(existingPath);
+              }
+              currentLevel = existingPath.children;
+            });
+          });
 
-          currentLevel = existingPath.children;
-        });
-      });
-
-      root.forEach((node) => {
-        if (node.isDir && node.children.length === 0) {
-          delete node.children;
+          root.forEach((node) => {
+            if (node.isDir && node.children.length === 0) {
+              delete node.children;
+            }
+          });
+          console.log(root)
+          setFs(root);
         }
-      });
+      };
 
-      setFs(root);
-    };
+      ws.current.onclose = () => {
+        console.log('WebSocket disconnected');
+      };
 
-    ws.onclose = () => {
-      console.log('WebSocket disconnected');
-    };
+    }, [id]);
 
-  }, [id]);
+  const createFile = (filePath) => {
+    ws.current.send(JSON.stringify({
+      type: 'createObject',
+      data: filePath
+    }));
+  };
 
   return (
-    <div className="bg-black h-svh text-white">
-      {fs.map((item, index) =>
-        item.isDir ? (
-          <Directory key={index} directory={item} />
-        ) : (
-          <File key={index} file={item} />
-        )
-      )}
+    <div className="bg-gray-900 h-screen">
+    <PanelGroup direction="horizontal" className="text-white flex">
+      <Panel defaultSize={18} className="mt-10">
+        <h2 className="ml-6 mb-2">Files</h2>
+        {fs.map((item, index) =>
+          item.isDir ? (
+            <Directory key={index} directory={item} create={createFile}/>
+          ) : (
+            <File key={index} file={item} className="cursor-pointer"/>
+          )
+        )}
+      </Panel>
+      <PanelResizeHandle />
+      <Panel>
+      <PanelGroup autoSaveId="example" direction="vertical" className="bg-gray-800">
+      <Panel className="mt-10">
+      <h2 className="ml-6 mb-2">Files</h2>
+      </Panel>
+      <PanelResizeHandle />
+      <Panel defaultSize={25} className="bg-black">
+        terminal
+      </Panel>
+      </PanelGroup>
+      </Panel>
+    </PanelGroup>
     </div>
   );
 };

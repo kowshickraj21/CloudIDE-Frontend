@@ -1,10 +1,20 @@
+import { useState } from "react";
 import { FaFile, FaReact, FaImage } from "react-icons/fa";
 import { BiLogoTypescript } from "react-icons/bi";
 import { IoLogoJavascript } from "react-icons/io";
+import { HiDotsVertical } from "react-icons/hi";
 /* eslint-disable react/prop-types */
 const File = ({ file }) => {
   const ext = file.name.split(".").at(-1);
-    return <div className="flex ml-5 items-center">{getLogo(ext)}{file.name}</div>;
+  const [menu, setMenu] = useState(false)
+    return <div className="flex ml-5 items-center justify-between pr-2 cursor-pointer hover:bg-gray-700">
+      <div className="flex items-center">{getLogo(ext)}{file.name}</div>
+      <div onClick={() => setMenu(true)}><HiDotsVertical /></div>
+      { menu?
+        <div className="absolute">
+          <p>CreateFile</p>
+        </div>:null}
+    </div>
   };
 
   const getLogo = (ext) => {
