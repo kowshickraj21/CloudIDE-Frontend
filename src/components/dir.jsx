@@ -7,7 +7,7 @@ import { FiFilePlus, FiFolderPlus } from "react-icons/fi";
 import { IoTrashOutline } from "react-icons/io5";
 
 
-const Directory = ({ directory, create }) => {
+const Directory = ({ directory, create, getFile }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [menu, setMenu] = useState(false);
   const [newFile, setNewFile] = useState(false);
@@ -117,7 +117,7 @@ const Directory = ({ directory, create }) => {
             child.isDir ? (
               <Directory key={index} directory={child} create={create} />
             ) : (
-              <File key={index} file={child} />
+              <File key={index} file={child} getFile={getFile} />
             )
           )}
         </div>

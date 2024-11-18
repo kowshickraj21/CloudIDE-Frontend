@@ -3,67 +3,79 @@ import File from "../components/file";
 import Directory from "../components/dir";
 import { useEffect, useState, useRef } from "react";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
+import MonacoEditor from "../components/codeEditor";
 
 const Stash = () => {
   const { id } = useParams();
   const [fs, setFs] = useState([]);
+  const [openFiles, setOpenFiles] = useState({});
+  const [currentFile, setCurrentFile] = useState("");
   const ws = useRef(null);
-  
 
-    useEffect(() => {
-      ws.current = new WebSocket('ws://localhost:3050/start');
+  useEffect(() => {
+    ws.current = new WebSocket('ws://localhost:3050/start');
 
-      ws.current.onopen = () => {
-        console.log('WebSocket connected');
-        ws.current.send(JSON.stringify({
-          type: 'getDir',
-          data: `stashes/${id}/`
-        }));
-      };
+    ws.current.onopen = () => {
+      console.log('WebSocket connected');
+      ws.current.send(JSON.stringify({
+        type: 'getDir',
+        data: `stashes/${id}/`
+      }));
+    };
 
-      ws.current.onmessage = (event) => {
-        const message = JSON.parse(event.data);
-        if (typeof message === 'string') {
-          console.log("File", message);
-        } else {
-          console.log('Received message:', message);
-          const root = [];
+    ws.current.onmessage = (event) => {
+      const message = JSON.parse(event.data);
+      if (message.type === "dir") {
+        console.log('Received message:', message);
+        const root = [];
 
-          message.forEach((path) => {
-            const parts = path.split('/');
-            let currentLevel = root;
+        message.data.forEach((path) => {
+          const parts = path.split('/');
+          let currentLevel = root;
 
-            parts.forEach((part, index) => {
-              if(index < 1 || part === "") return 
-              let existingPath = currentLevel.find((node) => node.name === part);
-              if (!existingPath) {
-                existingPath = {
-                  name: part,
-                  path: parts.slice(0, index + 1).join('/'),
-                  isDir: index !== parts.length - 1,
-                  children: [],
-                };
-                currentLevel.push(existingPath);
-              }
-              currentLevel = existingPath.children;
-            });
-          });
-
-          root.forEach((node) => {
-            if (node.isDir && node.children.length === 0) {
-              delete node.children;
+          parts.forEach((part, index) => {
+            if (index < 1 || part === "") return;
+            let existingPath = currentLevel.find((node) => node.name === part);
+            if (!existingPath) {
+              existingPath = {
+                name: part,
+                path: parts.slice(0, index + 1).join('/'),
+                isDir: index !== parts.length - 1,
+                children: [],
+              };
+              currentLevel.push(existingPath);
             }
+            currentLevel = existingPath.children;
           });
-          console.log(root)
-          setFs(root);
-        }
-      };
+        });
 
-      ws.current.onclose = () => {
-        console.log('WebSocket disconnected');
-      };
+        root.forEach((node) => {
+          if (node.isDir && node.children.length === 0) {
+            delete node.children;
+          }
+        });
+        console.log(root);
+        setFs(root);
 
-    }, [id]);
+      } else if (message.type === "file") {
+        const updatedFiles = {
+          ...openFiles,
+          [message.path]: message.data
+        };
+        setOpenFiles(updatedFiles);
+      }
+    };
+
+    ws.current.onclose = () => {
+      console.log('WebSocket disconnected');
+    };
+
+    return () => {
+      if (ws.current) {
+        ws.current.close();
+      }
+    };
+  }, [id]);
 
   const createFile = (filePath) => {
     ws.current.send(JSON.stringify({
@@ -72,32 +84,80 @@ const Stash = () => {
     }));
   };
 
+  const getFile = (filePath) => {
+    ws.current.send(JSON.stringify({
+      type: "getFile",
+      data: filePath
+    }));
+  };
+
+  const handleCodeChange = (code) => {
+    setOpenFiles((prevFiles) => ({
+      ...prevFiles,
+      [currentFile]: code,
+    }));
+  };
+
+  const getLanguage = (filePath) => {
+    const ext = filePath.split(".").pop();
+    switch (ext) {
+      case "jsx":
+      case "js":
+      case "tsx":
+      case "ts":
+        return "javascript";
+      case "py":
+        return "python";
+      case "json":
+        return "json";
+      default:
+        return "plaintext";
+    }
+  };
+
+  const openFile = (path) => {
+    if (!openFiles[path] && currentFile != path) {
+      console.log("Fetching file from backend:", path);
+      getFile(path);
+    } else {
+      console.log("File already open:", path);
+    }
+    setCurrentFile(path);
+  };
+  
+
   return (
     <div className="bg-gray-900 h-screen">
-    <PanelGroup direction="horizontal" className="text-white flex">
-      <Panel defaultSize={18} className="mt-10">
-        <h2 className="ml-6 mb-2">Files</h2>
-        {fs.map((item, index) =>
-          item.isDir ? (
-            <Directory key={index} directory={item} create={createFile}/>
-          ) : (
-            <File key={index} file={item} className="cursor-pointer"/>
-          )
-        )}
-      </Panel>
-      <PanelResizeHandle />
-      <Panel>
-      <PanelGroup autoSaveId="example" direction="vertical" className="bg-gray-800">
-      <Panel className="mt-10">
-      <h2 className="ml-6 mb-2">Files</h2>
-      </Panel>
-      <PanelResizeHandle />
-      <Panel defaultSize={25} className="bg-black">
-        terminal
-      </Panel>
+      <PanelGroup direction="horizontal" className="text-white flex">
+        <Panel defaultSize={18} className="mt-10">
+          <h2 className="ml-6 mb-2">Files</h2>
+          {fs.map((item, index) =>
+            item.isDir ? (
+              <Directory key={index} directory={item} create={createFile} getFile={openFile} />
+            ) : (
+              <File key={index} file={item} getFile={openFile} />
+            )
+          )}
+        </Panel>
+        <PanelResizeHandle />
+        <Panel>
+          <PanelGroup autoSaveId="example" direction="vertical" className="bg-gray-800">
+            <Panel className="mt-10">
+              {currentFile && openFiles[currentFile] !== undefined ? (
+                <MonacoEditor
+                  value={openFiles[currentFile]}
+                  language={getLanguage(currentFile)}
+                  onChange={handleCodeChange}
+                />
+              ) : null}
+            </Panel>
+            <PanelResizeHandle />
+            <Panel defaultSize={25} className="bg-black">
+              terminal
+            </Panel>
+          </PanelGroup>
+        </Panel>
       </PanelGroup>
-      </Panel>
-    </PanelGroup>
     </div>
   );
 };
