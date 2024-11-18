@@ -3,6 +3,8 @@ import { FaFile, FaReact, FaImage } from "react-icons/fa";
 import { BiLogoTypescript } from "react-icons/bi";
 import { IoLogoJavascript } from "react-icons/io";
 import { HiDotsVertical } from "react-icons/hi";
+import { VscJson } from "react-icons/vsc";
+import { RiMenu2Fill } from "react-icons/ri";
 /* eslint-disable react/prop-types */
 const File = ({ file, getFile }) => {
   const ext = file.name.split(".").at(-1);
@@ -29,6 +31,10 @@ const File = ({ file, getFile }) => {
       case 'jpeg':
       case 'svg':
         return <FaImage className="mr-1"/>
+      case 'json':
+        return <VscJson className="text-yellow-300 font-bold mr-1"/>
+      case "txt":
+        return <RiMenu2Fill className="mr-1"/>
       default:
          return <FaFile className="mr-1"/>;
     }

@@ -4,6 +4,7 @@ import Directory from "../components/dir";
 import { useEffect, useState, useRef } from "react";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import MonacoEditor from "../components/codeEditor";
+import { IoMdClose } from "react-icons/io";
 
 const Stash = () => {
   const { id } = useParams();
@@ -58,11 +59,10 @@ const Stash = () => {
         setFs(root);
 
       } else if (message.type === "file") {
-        const updatedFiles = {
-          ...openFiles,
-          [message.path]: message.data
-        };
-        setOpenFiles(updatedFiles);
+        setOpenFiles((prevFiles) => ({
+          ...prevFiles,
+          [message.path]: message.data,
+        }));
       }
     };
 
@@ -122,6 +122,7 @@ const Stash = () => {
     } else {
       console.log("File already open:", path);
     }
+    console.log(openFiles)
     setCurrentFile(path);
   };
   
@@ -142,12 +143,25 @@ const Stash = () => {
         <PanelResizeHandle />
         <Panel>
           <PanelGroup autoSaveId="example" direction="vertical" className="bg-gray-800">
-            <Panel className="mt-10">
+            <Panel className="">
+            <div className="h-10 w-full flex gap-5">
+            {Object.keys(openFiles).map((filePath,index) => (
+              <div className={`flex gap-5 px-2 items-center cursor-pointer ${filePath == currentFile?"bg-black":""}`} key={index} onClick={() => setCurrentFile(filePath)}>
+                <p>{filePath.split("/").pop()}</p>
+                <IoMdClose onClick={() => setOpenFiles((prevFiles) => {
+                  const updatedFiles = { ...prevFiles };
+                  delete updatedFiles[filePath];
+                  return updatedFiles;
+                })}/>
+              </div>
+            ))}
+            </div>
               {currentFile && openFiles[currentFile] !== undefined ? (
                 <MonacoEditor
                   value={openFiles[currentFile]}
                   language={getLanguage(currentFile)}
                   onChange={handleCodeChange}
+                  className="w-full h-full"
                 />
               ) : null}
             </Panel>
