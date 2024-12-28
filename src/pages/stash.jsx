@@ -4,11 +4,14 @@ import Directory from "../components/dir";
 import { useEffect, useState, useRef } from "react";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import MonacoEditor from "../components/codeEditor";
-import { IoMdClose } from "react-icons/io";
+import { IoMdClose,IoIosPlay } from "react-icons/io";
+import { FaRegStopCircle } from "react-icons/fa";
+
 
 const Stash = () => {
   const { id } = useParams();
   const [fs, setFs] = useState([]);
+  const [run, setRunning] = useState(false);
   const [openFiles, setOpenFiles] = useState({});
   const [currentFile, setCurrentFile] = useState("");
   const ws = useRef(null);
@@ -125,13 +128,23 @@ const Stash = () => {
     console.log(openFiles)
     setCurrentFile(path);
   };
-  
 
+  const handleRun = () => {
+    console.log(run)
+    setRunning(!run)
+  }
+  
   return (
     <div className="bg-gray-900 h-screen">
       <PanelGroup direction="horizontal" className="text-white flex">
-        <Panel defaultSize={18} className="mt-10">
-          <h2 className="ml-6 mb-2">Files</h2>
+        <Panel defaultSize={18} className="pt-2 bg-gray-800">
+        <div className="h-12 flex justify-between items-center">
+        <h2 className="ml-4">Files</h2>
+        { run?
+             <button className="bg-gray-500 text-white w-20 flex items-center justify-center h-8 mr-4 gap-1"  onClick={() => handleRun()}><FaRegStopCircle className="text-base"/>Stop</button>
+            :<button className="bg-green-500 text-white w-20 flex items-center justify-center h-8 mr-4 gap-1" onClick={() => handleRun()}><IoIosPlay className="text-lg"/>Run</button>
+        }
+          </div>
           {fs.map((item, index) =>
             item.isDir ? (
               <Directory key={index} directory={item} create={createFile} getFile={openFile} />
@@ -140,16 +153,14 @@ const Stash = () => {
             )
           )}
         </Panel>
-        <PanelResizeHandle />
-        <Panel>
-          <PanelGroup autoSaveId="example" direction="vertical" className="bg-gray-800">
-            <Panel className="">
+        <PanelResizeHandle className="w-2 hover:bg-blue-600"/>
+            <Panel className="bg-gray-700">
             <div className="h-10 w-full flex gap-5">
             {Object.keys(openFiles).map((filePath,index) => (
               <div className={`flex gap-5 px-2 items-center cursor-pointer ${filePath == currentFile?"bg-black":""}`} key={index} onClick={() => setCurrentFile(filePath)}>
                 <p>{filePath.split("/").pop()}</p>
                 <IoMdClose onClick={() => setOpenFiles((prevFiles) => {
-                  const updatedFiles = { ...prevFiles };
+                  const updatedFiles = {...prevFiles};
                   delete updatedFiles[filePath];
                   return updatedFiles;
                 })}/>
@@ -162,15 +173,30 @@ const Stash = () => {
                   language={getLanguage(currentFile)}
                   onChange={handleCodeChange}
                   className="w-full h-full"
+                  theme="vs-dark"
                 />
-              ) : null}
+              ) :
+                Object.keys(openFiles).length == 0? 
+                <div className="w-full h-full flex justify-center items-center">
+                  Start Coding by Opening a File
+                </div>:null
+              }
             </Panel>
-            <PanelResizeHandle />
-            <Panel defaultSize={25} className="bg-black">
+            <PanelResizeHandle className="w-2 hover:bg-blue-600 "/>
+            <Panel defaultSize={25}>
+            <PanelGroup direction="vertical">
+            <Panel defaultSize={25} className="">
+              <div className="h-10 flex">
+
+              </div>
+              <iframe src="/console" className="transform scale-50 w-[200%] h-[200%] origin-top-left bg-white"></iframe>
+            </Panel>
+            <PanelResizeHandle className="h-2 hover:bg-blue-600 "/>
+            <Panel defaultSize={25} className="bg-black p-5">
               terminal
             </Panel>
-          </PanelGroup>
-        </Panel>
+            </PanelGroup>
+            </Panel>
       </PanelGroup>
     </div>
   );
