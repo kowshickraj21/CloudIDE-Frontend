@@ -9,7 +9,7 @@ const Console = () => {
         <Navbar User={user}/>
       <div className="w-full px-10 mt-10">
         <button className="bg-green-600 text-white px-5 py-2" onClick={() => {setNewStashModal(true)}}>Create Stash</button>
-        {newStashModal ? <NewStashModal />:null}
+        {newStashModal ? <NewStashModal User={user} close={() => setNewStashModal(false)}/>:null}
       <table className="w-full text-center rounded-md">
         <tbody>
         <tr className="bg-gray-100 border-2 h-10">
