@@ -6,6 +6,8 @@ import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import MonacoEditor from "../components/codeEditor";
 import { IoMdClose,IoIosPlay } from "react-icons/io";
 import { FaRegStopCircle } from "react-icons/fa";
+import TerminalComponent from "../components/terminal";
+// import axios from 'axios'
 
 
 const Stash = () => {
@@ -14,10 +16,20 @@ const Stash = () => {
   const [run, setRunning] = useState(false);
   const [openFiles, setOpenFiles] = useState({});
   const [currentFile, setCurrentFile] = useState("");
+  const [terminalOutput,setTerminalOutput] = useState("");
   const ws = useRef(null);
 
   useEffect(() => {
-    ws.current = new WebSocket('ws://localhost:3050/start');
+  //   axios.post(
+  //     "http://localhost:3050/start",
+  //     {
+  //       name:"newtest",
+  //       image:"node",
+  //       owner:"kowshickraj21.2005@gmail.com",
+  //       port: 3000
+  //     }
+  // );
+    ws.current = new WebSocket('ws://localhost:3050/run');
 
     ws.current.onopen = () => {
       console.log('WebSocket connected');
@@ -66,6 +78,8 @@ const Stash = () => {
           ...prevFiles,
           [message.path]: message.data,
         }));
+      } else if(message.type === "output") {
+        setTerminalOutput(message.data)
       }
     };
 
@@ -100,6 +114,13 @@ const Stash = () => {
       [currentFile]: code,
     }));
   };
+
+  const sendCommand = (command) => {
+      ws.current.send(JSON.stringify({
+        type: 'terminalCommand',
+        data: command
+      }));
+  }
 
   const getLanguage = (filePath) => {
     const ext = filePath.split(".").pop();
@@ -192,8 +213,8 @@ const Stash = () => {
               <iframe src="/console" className="transform scale-50 w-[200%] h-[200%] origin-top-left bg-white"></iframe>
             </Panel>
             <PanelResizeHandle className="h-2 hover:bg-blue-600 "/>
-            <Panel defaultSize={25} className="bg-black p-5">
-              terminal
+            <Panel defaultSize={25} className="bg-black">
+              <TerminalComponent sendCommand={sendCommand} terminalOutput={terminalOutput} setTerminalOutput={setTerminalOutput}/>
             </Panel>
             </PanelGroup>
             </Panel>

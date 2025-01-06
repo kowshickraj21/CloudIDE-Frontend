@@ -12,26 +12,25 @@ const NewStashModal = ({ User, close }) => {
 
   const handleSubmit = async () => {
     console.log("Clicked")
-      const user = await axios.post(
+      await axios.post(
           "http://localhost:3050/create",
           {
             name : nameInput.current.value,
             image: imageInput.current.value,
             owner: User.email,
-            port: portInput.current.value,
+            port: Number(portInput.current.value),
           }
       );
-      console.log(user.data)
   }
 
   const handleAvailable = async (name) => {
     const stash = await axios.post(
-      "http://localhost:3050/getStash",
+      "http://localhost:3050/findStash",
       {
         name : name
       }
       )
-    if(stash == null) setAvailable(true)
+    if(stash) setAvailable(true)
   }
 
   return (
@@ -49,7 +48,7 @@ const NewStashModal = ({ User, close }) => {
           <button onClick={() => handleAvailable(nameInput.current.value)} className='underline'>Check Availability</button>
           </div>
           <input type="text" className="border-2 w-full pl-2" placeholder='Port Number' pattern="[1-9]{1}[0-9]{3}" ref={portInput}/>
-          <button className="bg-green-600 text-white py-2" disabled={available} onClick={() => handleSubmit()}>Create</button>
+          <button className="bg-green-600 text-white py-2" disabled={!available} onClick={() => handleSubmit()}>Create</button>
         </div>
         </div>
     </div>
