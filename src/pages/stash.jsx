@@ -7,7 +7,7 @@ import MonacoEditor from "../components/codeEditor";
 import { IoMdClose,IoIosPlay } from "react-icons/io";
 import { FaRegStopCircle } from "react-icons/fa";
 import TerminalComponent from "../components/terminal";
-// import axios from 'axios'
+import axios from 'axios'
 
 
 const Stash = () => {
@@ -20,16 +20,23 @@ const Stash = () => {
   const ws = useRef(null);
 
   useEffect(() => {
-  //   axios.post(
-  //     "http://localhost:3050/start",
-  //     {
-  //       name:"newtest",
-  //       image:"node",
-  //       owner:"kowshickraj21.2005@gmail.com",
-  //       port: 3000
-  //     }
-  // );
-    ws.current = new WebSocket('ws://localhost:3050/run');
+    const initialize = async() => {
+
+    const stashData = await axios.post( "http://localhost:3050/findStash", { name:id })
+    const stash = stashData.data
+    console.log("stash",stash)
+
+    axios.post(
+      "http://localhost:3050/start",
+      {
+        name: stash.name,
+        image: stash.image,
+        owner: stash.owner,
+        port: stash.port
+      }
+    );
+
+    ws.current = new WebSocket(`ws://localhost:3050/run?stash=${id}`);
 
     ws.current.onopen = () => {
       console.log('WebSocket connected');
@@ -92,12 +99,22 @@ const Stash = () => {
         ws.current.close();
       }
     };
+  }
+  initialize()
   }, [id]);
 
   const createFile = (filePath) => {
     ws.current.send(JSON.stringify({
       type: 'createObject',
       data: filePath
+    }));
+  };
+
+  const saveFile = (content) => {
+    ws.current.send(JSON.stringify({
+      type: 'writeFile',
+      path: currentFile,
+      data: content
     }));
   };
 
@@ -193,6 +210,7 @@ const Stash = () => {
                   value={openFiles[currentFile]}
                   language={getLanguage(currentFile)}
                   onChange={handleCodeChange}
+                  saveFile = {saveFile}
                   className="w-full h-full"
                   theme="vs-dark"
                 />

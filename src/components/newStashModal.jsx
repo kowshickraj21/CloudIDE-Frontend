@@ -9,6 +9,7 @@ const NewStashModal = ({ User, close }) => {
   const nameInput = useRef(null)
   const imageInput = useRef(null)
   const portInput = useRef(null)
+  const [availableMessage, setAvailableMessage] = useState("");
 
   const handleSubmit = async () => {
     console.log("Clicked")
@@ -21,6 +22,7 @@ const NewStashModal = ({ User, close }) => {
             port: Number(portInput.current.value),
           }
       );
+      close
   }
 
   const handleAvailable = async (name) => {
@@ -30,7 +32,11 @@ const NewStashModal = ({ User, close }) => {
         name : name
       }
       )
-    if(stash) setAvailable(true)
+    if(stash){
+      setAvailable(true)
+      setAvailableMessage("")
+    }
+    else setAvailableMessage("Name already available! Choose another name.")
   }
 
   return (
@@ -47,8 +53,9 @@ const NewStashModal = ({ User, close }) => {
           <input type="text" className="border-2 w-full pl-2" placeholder="Choose a Name" ref={nameInput}/>
           <button onClick={() => handleAvailable(nameInput.current.value)} className='underline'>Check Availability</button>
           </div>
+          <p>{availableMessage}</p>
           <input type="text" className="border-2 w-full pl-2" placeholder='Port Number' pattern="[1-9]{1}[0-9]{3}" ref={portInput}/>
-          <button className="bg-green-600 text-white py-2" disabled={!available} onClick={() => handleSubmit()}>Create</button>
+          <button className="bg-green-600 text-white py-2 disabled:cursor-not-allowed disabled:bg-green-400" disabled={!available} onClick={() => handleSubmit()}>Create</button>
         </div>
         </div>
     </div>

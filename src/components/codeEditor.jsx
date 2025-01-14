@@ -2,7 +2,7 @@
 import { useRef, useEffect } from 'react';
 import * as monaco from 'monaco-editor';
 
-const MonacoEditor = ({ value, language, onChange }) => {
+const MonacoEditor = ({ value, language, onChange, saveFile }) => {
   const editorRef = useRef(null);
 
   useEffect(() => {
@@ -17,12 +17,20 @@ const MonacoEditor = ({ value, language, onChange }) => {
         const value = editor.getValue();
         onChange(value);
       });
+
+      editor.addCommand(
+        monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyC,
+        () => {
+          console.log('Ctrl + C was pressed!')
+          saveFile(value)
+        }
+      );
     }
 
     return () => {
       editor.dispose();
     };
-  }, [value, language, onChange]);
+  }, [value, language, onChange, saveFile]);
 
   return <div ref={editorRef} style={{ height: '500px', width: '100%' }} />;
 };
