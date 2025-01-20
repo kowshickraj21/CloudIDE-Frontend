@@ -8,7 +8,7 @@ const Login = ({ setOpen }) => {
 
   useEffect(() => {
     if(localStorage.getItem("user")){
-      navigate('/');
+      navigate('/console');
     }
   },[navigate])
 

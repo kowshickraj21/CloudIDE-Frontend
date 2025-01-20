@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import home from "../assets/home1.png";
 import LoginModal from "../components/loginModal";
+import AboutPage from "../components/aboutPage";
 import { useSearchParams } from "react-router-dom";
 
 function Home() {
@@ -22,7 +23,7 @@ function Home() {
   return (
     <div>
       {params.get("loginModal") === "open" && <LoginModal setOpen={() => {setParams("loginModal=close")}}/>}
-      <div className="h-svh bg-gradient-to-b from-[#1b3e48] to-black flex flex-row items-center font-sans">
+      <div className="h-svh bg-gradient-to-b from-[#1b3e48] to-[#0b191d] flex flex-row items-center font-sans">
         <div className="font-bold text-white leading-snug">
           <h1 className={`transition-all duration-300 ${loaded ? "ml-20 opacity-100 text-9xl" : "-ml-20 opacity-0 text-8xl"}`}>
             Code.
@@ -49,6 +50,7 @@ function Home() {
           <img src={home} alt="home" className="object-cover block" />
         </div>
       </div>
+      <AboutPage />
     </div>
   );
 }
