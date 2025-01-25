@@ -13,7 +13,7 @@ const Console = () => {
         <button className="bg-green-600 text-white px-5 py-2" onClick={() => {setNewStashModal(true)}}>Create Stash</button>
         {newStashModal ? <NewStashModal User={user} close={() => setNewStashModal(false)}/>:null}
         </div>
-      <table className="w-full text-center rounded-md">
+      <table className="w-11/12 m-auto text-center rounded-md">
         <tbody>
         <tr className="bg-gray-500 border-2 h-10">
           <td>S.No</td>

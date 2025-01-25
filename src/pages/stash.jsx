@@ -4,8 +4,7 @@ import Directory from "../components/dir";
 import { useEffect, useState, useRef } from "react";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import MonacoEditor from "../components/codeEditor";
-import { IoMdClose,IoIosPlay } from "react-icons/io";
-import { FaRegStopCircle } from "react-icons/fa";
+import { IoMdClose } from "react-icons/io";
 import TerminalComponent from "../components/terminal";
 import axios from 'axios'
 
@@ -13,7 +12,6 @@ import axios from 'axios'
 const Stash = () => {
   const { id } = useParams();
   const [fs, setFs] = useState([]);
-  const [run, setRunning] = useState(false);
   const [openFiles, setOpenFiles] = useState({});
   const [currentFile, setCurrentFile] = useState("");
   const [terminalOutput,setTerminalOutput] = useState("");
@@ -167,21 +165,16 @@ const Stash = () => {
     setCurrentFile(path);
   };
 
-  const handleRun = () => {
-    console.log(run)
-    setRunning(!run)
-  }
   
   return (
+    <div>
+    {
+      fs.length >0 ? 
     <div className="bg-gray-900 h-screen">
       <PanelGroup direction="horizontal" className="text-white flex">
         <Panel defaultSize={18} className="pt-2 bg-gray-800">
         <div className="h-12 flex justify-between items-center">
         <h2 className="ml-4">Files</h2>
-        { run?
-             <button className="bg-gray-500 text-white w-20 flex items-center justify-center h-8 mr-4 gap-1"  onClick={() => handleRun()}><FaRegStopCircle className="text-base"/>Stop</button>
-            :<button className="bg-green-500 text-white w-20 flex items-center justify-center h-8 mr-4 gap-1" onClick={() => handleRun()}><IoIosPlay className="text-lg"/>Run</button>
-        }
           </div>
           {fs.map((item, index) =>
             item.isDir ? (
@@ -225,10 +218,11 @@ const Stash = () => {
             <Panel defaultSize={25}>
             <PanelGroup direction="vertical">
             <Panel defaultSize={25} className="">
-              <div className="h-10 flex">
-
+              <div className="h-full flex justify-center items-center">
+                <p>Run to see the Output</p>
               </div>
-              <iframe src="/console" className="transform scale-50 w-[200%] h-[200%] origin-top-left bg-white"></iframe>
+              {/* <iframe src="/console" className="transform scale-50 w-[200%] h-[200%] origin-top-left bg-white"></iframe> */}
+
             </Panel>
             <PanelResizeHandle className="h-2 hover:bg-blue-600 "/>
             <Panel defaultSize={25} className="bg-black">
@@ -237,6 +231,13 @@ const Stash = () => {
             </PanelGroup>
             </Panel>
       </PanelGroup>
+    </div>
+      : <div role="status" className="bg-gray-900 h-screen flex items-center justify-center">
+      <svg aria-hidden="true" className="w-20 h-20 text-gray-200 animate-spin fill-blue-600" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor"/>
+          <path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill"/>
+      </svg>
+  </div>      }
     </div>
   );
 };

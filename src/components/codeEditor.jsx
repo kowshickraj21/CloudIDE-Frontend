@@ -28,12 +28,29 @@ const MonacoEditor = ({ value, language, onChange, saveFile }) => {
         saveFile(editor.getValue());
       }
     );
+
     return () => {
       editor.dispose();
     };
-  }, [value, language, onChange, saveFile]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); 
 
-  return <div ref={editorRef} style={{ height: '700px', width: '100%' }} />;
+  useEffect(() => {
+    if (monacoInstanceRef.current && monacoInstanceRef.current.getValue() !== value) {
+      monacoInstanceRef.current.setValue(value);
+    }
+  }, [value]);
+
+  useEffect(() => {
+    if (monacoInstanceRef.current) {
+      monaco.editor.setModelLanguage(
+        monacoInstanceRef.current.getModel(),
+        language
+      );
+    }
+  }, [language]);
+
+  return <div ref={editorRef} style={{ height: '780px', width: '100%' }} />;
 };
 
 export default MonacoEditor;

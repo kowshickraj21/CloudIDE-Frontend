@@ -1,83 +1,66 @@
 /* eslint-disable react/prop-types */
-import { useEffect, useRef } from "react";
-import { Terminal } from "xterm";
-import { FitAddon } from "xterm-addon-fit";
-import "xterm/css/xterm.css";
+import { useState, useRef, useEffect } from "react";
 
-const TerminalComponent = ({
-  sendCommand,
-  terminalOutput,
-  setTerminalOutput,
-}) => {
-  const terminalRef = useRef(null);
-  const terminalInstance = useRef(null);
-  const fitAddon = useRef(null);
+const TerminalComponent = ({ sendCommand, terminalOutput, setTerminalOutput }) => {
+  const [history, setHistory] = useState([]);
+  const [currentInput, setCurrentInput] = useState("");
+  const terminalContainerRef = useRef(null);
+  const terminalInputRef = useRef(null);
 
-  useEffect(() => {
-    const term = new Terminal({
-      cursorBlink: true,
-      theme: {
-        background: "#1d1f21",
-        foreground: "#c5c8c6",
-      },
-      rows: 25,
-    });
+  const handleCommand = () => {
+    if (currentInput.trim() === "") return;
 
-    const fit = new FitAddon();
-    term.loadAddon(fit);
+    setHistory((prevHistory) => [...prevHistory, `> ${currentInput}`]);
 
-    terminalInstance.current = term;
-    fitAddon.current = fit;
-
-    if (terminalRef.current) {
-      term.open(terminalRef.current);
-      fit.fit();
-    }
-
-    term.write("> ");
-
-    term.onData((data) => {
-      if (data === "\r") {
-        const command = term.buffer.active
-          .getLine(term.buffer.active.cursorY)
-          .translateToString()
-          .split("> ")
-          .pop()
-          .trim();
-        if (command.trim() === "clear") {
-          term.reset()
-          console.log("cleared")
-          term.write("\r> ");
-        } else {
-          sendCommand(command);
-          term.write("\r\n> ");
-        }
-      } else if (data === "\x7F") {
-        if (term.buffer.active.cursorX > 2) {
-          term.write("\b \b");
-        }
-      } else {
-        term.write(data);
-      }
-    });
-
-    return () => {
-      term.dispose();
-    };
-  }, [sendCommand]);
+    sendCommand(currentInput);
+    setCurrentInput("");
+  };
 
   useEffect(() => {
-    if (terminalOutput && terminalInstance.current) {
-      terminalInstance.current.write(`${terminalOutput}\r\n`);
-      setTerminalOutput("");
+      console.log(terminalOutput)
+      setHistory((prevHistory) => [...prevHistory, terminalOutput]);
+      setTerminalOutput("")
+  }, [setTerminalOutput, terminalOutput]);
+
+  useEffect(() => {
+    if (terminalContainerRef.current) {
+      terminalContainerRef.current.scrollTop =
+        terminalContainerRef.current.scrollHeight;
     }
-  }, [terminalOutput, setTerminalOutput]);
+  }, [history]);
+
+  const focus = () => {
+    terminalInputRef.current.focus()
+  }
 
   return (
     <div
-      className="h-full w-full overflow-y-auto" 
-      ref={terminalRef}
-    ></div>
+      className="w-full bg-black text-white font-mono p-4 h-full overflow-y-auto"
+      ref={terminalContainerRef}
+      onClick={ () => focus()}
+    >
+      <div>
+        {history.map((line, index) => (
+          <div key={index}>{line}</div>
+        ))}
+      </div>
+
+      <div className="flex">
+        <span>&gt;&nbsp;</span>
+        <input
+          ref={terminalInputRef}
+          type="text"
+          value={currentInput}
+          onChange={(e) => setCurrentInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              handleCommand();
+            }
+          }}
+          className="bg-black text-white resize-none w-full border-none outline-none flex-grow cursor-default"
+        />
+      </div>
+    </div>
   );
 };
 
