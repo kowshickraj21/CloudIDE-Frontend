@@ -6,21 +6,34 @@ const TerminalComponent = ({ sendCommand, terminalOutput, setTerminalOutput }) =
   const [currentInput, setCurrentInput] = useState("");
   const terminalContainerRef = useRef(null);
   const terminalInputRef = useRef(null);
+  const [cwd, setCwd] = useState("/>");
 
   const handleCommand = () => {
     if (currentInput.trim() === "") return;
+    if(currentInput == "clear"){
+      setHistory([]);
+      setCurrentInput("");
+      return;
+    }
 
-    setHistory((prevHistory) => [...prevHistory, `> ${currentInput}`]);
-
+    setHistory((prevHistory) => [...prevHistory, `${cwd} ${currentInput}`]);
     sendCommand(currentInput);
+    setCwd("")
     setCurrentInput("");
   };
 
   useEffect(() => {
-      console.log(terminalOutput)
+    if (terminalOutput && /^\/.*#$/.test(terminalOutput.trim())) {
+      console.log("Setting cwd from terminalOutput:", terminalOutput);
+      const updatedCwd = terminalOutput.trim().replace(/\s*#$/, ">")
+      if(updatedCwd.includes(">")) setCwd(updatedCwd);
+    } else if (terminalOutput) {
+      console.log("Adding to history:", terminalOutput);
       setHistory((prevHistory) => [...prevHistory, terminalOutput]);
-      setTerminalOutput("")
-  }, [setTerminalOutput, terminalOutput]);
+    }
+    setTerminalOutput("");
+  }, [terminalOutput, setTerminalOutput]);
+  
 
   useEffect(() => {
     if (terminalContainerRef.current) {
@@ -46,13 +59,17 @@ const TerminalComponent = ({ sendCommand, terminalOutput, setTerminalOutput }) =
       </div>
 
       <div className="flex">
-        <span>&gt;&nbsp;</span>
+        <span className="mr-2">{cwd}</span>
         <input
           ref={terminalInputRef}
           type="text"
           value={currentInput}
           onChange={(e) => setCurrentInput(e.target.value)}
           onKeyDown={(e) => {
+            if (e.ctrlKey && e.key === "c"){
+              e.preventDefault();
+              sendCommand("\x03");
+            }
             if (e.key === "Enter") {
               handleCommand();
             }
